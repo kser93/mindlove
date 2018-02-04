@@ -1,19 +1,29 @@
 #include <iostream>
 #include <vector>
 #include <stack>
-#include <iterator>
 #include <string>
+#include <iterator>
+
 
 const std::vector<std::string> tests{ 
-	// "Hello world!\n"
+	/*"Hello world!\n"*/
 	"++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.",
+	/*(Bounds check left : pipe to wc should display 1)*/
+	"+[+++++++++++++++++++++++++++++++++.<]",
 };
+
 
 int eval(const std::string &);
 
+template<class RandomAccessIt>
+RandomAccessIt circ_next(RandomAccessIt, const RandomAccessIt &, const RandomAccessIt &);
+
+template<class RandomAccessIt>
+RandomAccessIt circ_prev(RandomAccessIt, const RandomAccessIt &, const RandomAccessIt &);
+
 int main()
 {
-	return eval(tests[0]);
+	return eval(tests[1]);
 }
 
 int eval(const std::string &src)
@@ -21,12 +31,20 @@ int eval(const std::string &src)
 	const unsigned cells{ 30000 };
 	std::vector<int8_t> m(cells, 0);
 	auto it = std::begin(m);
+	const auto m_first = std::begin(m);
+	const auto m_last = std::end(m);
 	std::stack<std::size_t> s;
 
 	auto incr_cell = [&it]() -> void { (*it)++; };
 	auto decr_cell = [&it]() -> void { (*it)--; };
-	auto next_cell = [&it]() -> void { (it)++; };
-	auto prev_cell = [&it]() -> void { (it)--; };
+	auto next_cell = [&it, &m_first, &m_last]() -> void
+	{
+		it = circ_next(it, m_first, m_last);
+	};
+	auto prev_cell = [&it, &m_first, &m_last]() -> void
+	{
+		it = circ_prev(it, m_first, m_last);
+	};
 	auto read_cell = [&it]() -> void { std::cin >> *it; };
 	auto write_cell = [&it]() -> void { std::cout << *it; };
 
@@ -72,4 +90,22 @@ int eval(const std::string &src)
 	if (!s.empty())
 		throw std::invalid_argument("Unbalanced brackets - did not closed at the end");
 	return 0;
+}
+
+template<class RandomAccessIt>
+RandomAccessIt circ_next(RandomAccessIt it, const RandomAccessIt &first, const RandomAccessIt &last)
+{
+	if (it == last - 1)
+		return first;
+	else
+		return std::next(it);
+}
+
+template<class RandomAccessIt>
+RandomAccessIt circ_prev(RandomAccessIt it, const RandomAccessIt &first, const RandomAccessIt &last)
+{
+	if (it == first)
+		return last - 1;
+	else
+		return std::prev(it);
 }
